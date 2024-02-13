@@ -69,6 +69,9 @@ struct TextFrame {
 struct Status {
   const uint32_t version = 2403131; // version year month day release
   const char* git_version = GIT_VERSION;
+  float ptemp = -1000.0; //processor_temp
+  float vbat =  = -1000.0; //battery_voltage
+  time_t bootTime;
   bool mqtt_connected = false;
   bool radio_ready = false;
   int16_t radio_error = 0;

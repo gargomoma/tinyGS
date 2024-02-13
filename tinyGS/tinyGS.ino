@@ -159,6 +159,8 @@ void setup()
   configManager.delay(1000);
   mqtt.begin();
 
+  status.bootTime = time (NULL) - millis()/1000;
+
   if (configManager.getOledBright() == 0)
   {
     displayTurnOff();
@@ -210,6 +212,8 @@ void loop() {
   }
 
   // connected
+  getProcessorTemperature();
+  checkBattery();
 
   mqtt.loop();
   OTA::loop();
@@ -319,4 +323,58 @@ void printControls()
   Log::console(PSTR("!b - reboot the board"));
   Log::console(PSTR("!p - send test packet to nearby stations (to check transmission)"));
   Log::console(PSTR("------------------------------------"));
+}
+
+#if CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
+	#include "driver/temp_sensor.h"
+#else
+	#ifdef __cplusplus
+	extern "C" {
+	uint8_t temprature_sens_read();
+		}
+	#endif
+#endif
+
+float getProcessorTemperature() {
+  // Implementation for getting the processor temperature
+  // Checks temp every 30 sec
+  // Different method for each ESP SoC.
+  #define TEMP_INTERVAL 30000
+  static unsigned long lastTempTime = 0;
+
+	float temperature = -1000.0;
+	if (millis() - lastTempTime > TEMP_INTERVAL) {
+		lastTempTime = millis();
+		#if CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
+			//float temperature
+			temp_sensor_config_t temp_sensor  = TSENS_CONFIG_DEFAULT();
+			temp_sensor_set_config(temp_sensor);
+			temp_sensor_start();
+			esp_err_t temp_reading = temp_sensor_read_celsius(&temperature);
+			temp_sensor_stop();
+			if (temp_reading != ESP_OK) {
+			  temperature = -1000.0; // Placeholder value for invalid reading
+				}	  
+		#else
+			uint8_t temp_raw = temprature_sens_read();
+			if (temp_raw != 128){
+				temperature = (temp_raw - 32) / 1.8f;			
+				}
+		#endif
+	}
+	status.ptemp = temperature!=-1000.0  ? temperature : status.ptemp;
+}
+
+void checkBattery()
+{// based on mdkendall https://github.com/G4lile0/tinyGS/pull/177/files
+  #define BATTERY_INTERVAL 30000
+  static unsigned long lastReadBattTime = 0;
+
+  if (millis() - lastReadBattTime > BATTERY_INTERVAL) {
+    lastReadBattTime = millis();
+    if (configManager.getbattery()) {
+      float vbatMeas = (float)analogReadMilliVolts(configManager.getbattPin()) * configManager.getbattScale() * 0.001f;
+      status.vbat = (0.75 * status.vbat) + (0.25 * vbatMeas);
+    }
+  }
 }
