@@ -334,7 +334,7 @@ void printControls()
 	#endif
 #endif
 
-float getProcessorTemperature() {
+void getProcessorTemperature() {
   // Implementation for getting the processor temperature
   // Checks temp every 30 sec
   // Different method for each ESP SoC.
