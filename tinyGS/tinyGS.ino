@@ -159,8 +159,6 @@ void setup()
   configManager.delay(1000);
   mqtt.begin();
 
-  status.bootTime = time (NULL) - millis()/1000;
-
   if (configManager.getOledBright() == 0)
   {
     displayTurnOff();
@@ -214,6 +212,7 @@ void loop() {
   // connected
   getProcessorTemperature();
   checkBattery();
+  status.bootTime = time (NULL) - millis()/1000;
 
   mqtt.loop();
   OTA::loop();
