@@ -53,6 +53,7 @@ constexpr auto UPDATE_URL = "/firmware";
 constexpr auto RESTART_URL = "/restart";
 constexpr auto REFRESH_CONSOLE_URL = "/cs";
 constexpr auto REFRESH_WORLDMAP_URL = "/wm";
+constexpr auto JSON_URL = "/json";								  
 
 const char TITLE_TEXT[] PROGMEM = "TinyGS Configuration";
 
@@ -73,6 +74,7 @@ enum boardNum
  #elif CONFIG_IDF_TARGET_ESP32C3
   HELTEC_LORA32_HTCT62 = 0,
   ESP32C3_SX1278_LF,
+  ESP32C3_E32400M30S,  
  #else
   HELTEC_V1_LF = 0,
   HELTEC_V1_HF,
@@ -242,6 +244,7 @@ private:
 
   ConfigManager();
   void handleRoot();
+  void handleJsonStats(); //gargomoma
   void handleDashboard();
   void handleRefreshConsole();
   void handleRefreshWorldmap();
