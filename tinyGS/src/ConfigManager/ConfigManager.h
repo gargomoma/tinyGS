@@ -53,6 +53,7 @@ constexpr auto UPDATE_URL = "/firmware";
 constexpr auto RESTART_URL = "/restart";
 constexpr auto REFRESH_CONSOLE_URL = "/cs";
 constexpr auto REFRESH_WORLDMAP_URL = "/wm";
+constexpr auto JSON_URL = "/json";
 
 const char TITLE_TEXT[] PROGMEM = "TinyGS Configuration";
 
@@ -243,6 +244,7 @@ private:
 
   ConfigManager();
   void handleRoot();
+  void handleJsonStats();
   void handleDashboard();
   void handleRefreshConsole();
   void handleRefreshWorldmap();

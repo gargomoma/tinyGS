@@ -89,6 +89,7 @@ ConfigManager::ConfigManager()
   server.on(RESTART_URL, [this] { handleRestart(); });
   server.on(REFRESH_CONSOLE_URL, [this] { handleRefreshConsole(); });
   server.on(REFRESH_WORLDMAP_URL, [this] { handleRefreshWorldmap(); });
+  server.on(JSON_URL, [this] { handleJsonStats(); });//@gargomoma
   setupUpdateServer(
       [this](const char *updatePath) { httpUpdater.setup(&server, updatePath); },
       [this](const char *userName, char *password) { httpUpdater.updateCredentials(userName, password); });
@@ -151,6 +152,64 @@ void ConfigManager::handleRoot()
 
   server.sendHeader("Content-Length", String(s.length()));
   server.send(200, "text/html; charset=UTF-8", s);
+}
+
+void ConfigManager::handleJsonStats()
+{
+  if (getState() == IOTWEBCONF_STATE_ONLINE)
+  {
+    // -- Authenticate
+    if (!server.authenticate(IOTWEBCONF_ADMIN_USER_NAME, getApPasswordParameter()->valueBuffer))
+    {
+      IOTWEBCONF_DEBUG_LINE(F("Requesting authentication."));
+      server.requestAuthentication();
+      return;
+    }
+  }
+
+  DynamicJsonDocument jsonDoc(1024);
+
+  JsonObject dashboard = jsonDoc.createNestedObject("dashboard");
+  dashboard["name"] = getThingName();
+  dashboard["version"] = status.version;
+  dashboard["mqttServer"] = status.mqtt_connected;// ? "CONNECTED" : "NOT CONNECTED";
+  dashboard["wifiRSSI"] = WiFi.isConnected() ? WiFi.RSSI() : -1000.0;
+  dashboard["radioReady"] = Radio::getInstance().isReady();
+  dashboard["noiseFloor"] = status.modeminfo.currentRssi;
+  dashboard["socTemperature"] = status.ptemp != -1000.0 ? status.ptemp : -1000.0;
+  dashboard["lowPower"] = getLowPower();
+  dashboard["bootTime"] = status.bootTime;
+
+  JsonObject battery = jsonDoc.createNestedObject("battery");
+  battery["measure"] = getbattery();
+  if ( getbattery() ) {
+    battery["status"] = status.vbat != -1000.0 ? status.vbat : -1000.0;
+    battery["pin"] = getbattPin();
+    battery["scale"] = getbattScale();
+  }
+
+  JsonObject modemConfig = jsonDoc.createNestedObject("modemConfig");
+  modemConfig["satellite"] = status.modeminfo.satellite;
+  modemConfig["modulation"] = status.modeminfo.modem_mode;
+  modemConfig["frequency"] = status.modeminfo.frequency;
+  modemConfig["sf"] = status.modeminfo.sf;
+  modemConfig["cr"] = status.modeminfo.cr;
+  modemConfig["bw"] = status.modeminfo.bw;
+  modemConfig["bitrate"] = status.modeminfo.bitrate;
+  modemConfig["freqDev"] = status.modeminfo.freqDev;
+
+  JsonObject lastPacket = jsonDoc.createNestedObject("lastPacket");
+  lastPacket["receivedAt"] = status.lastPacketInfo.time;
+  lastPacket["signalRSSI"] = status.lastPacketInfo.rssi;
+  lastPacket["signalSNR"] = status.lastPacketInfo.snr;
+  lastPacket["frequencyError"] = status.lastPacketInfo.frequencyerror;
+  lastPacket["crcError"] = status.lastPacketInfo.crc_error;
+
+  String jsonString;
+  serializeJson(jsonDoc, jsonString);
+
+  server.sendHeader("Content-Type", "application/json");
+  server.send(200, "application/json", jsonString);
 }
 
 void ConfigManager::handleDashboard()
