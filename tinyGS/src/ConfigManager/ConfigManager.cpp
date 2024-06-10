@@ -190,6 +190,7 @@ void ConfigManager::handleJsonStats()
 
   JsonObject modemConfig = jsonDoc.createNestedObject("modemConfig");
   modemConfig["satellite"] = status.modeminfo.satellite;
+  modemConfig["NORAD"] = status.modeminfo.NORAD;  
   modemConfig["modulation"] = status.modeminfo.modem_mode;
   modemConfig["frequency"] = status.modeminfo.frequency;
   modemConfig["sf"] = status.modeminfo.sf;
