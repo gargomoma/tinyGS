@@ -22,6 +22,7 @@
 #include "../Logger/Logger.h"
 #include "../Radio/Radio.h"
 #include "../Display/graphics.h"
+#include <ESP32SSDP.h>
 #include "ArduinoJson.h"
 #if ARDUINOJSON_USE_LONG_LONG == 0 && !PLATFORMIO
 #error "Using Arduino IDE is not recommended, please follow this guide https://github.com/G4lile0/tinyGS/wiki/Arduino-IDE or edit /ArduinoJson/src/ArduinoJson/Configuration.hpp and amend to #define ARDUINOJSON_USE_LONG_LONG 1 around line 68"
@@ -56,6 +57,7 @@ ConfigManager::ConfigManager()
 #elif CONFIG_IDF_TARGET_ESP32C3
   {      0x3c,        0,        1,       UNUSED,        20,       21,      RADIO_SX1262,    8,   UNUSED,    3,      4,     5,       6,      7,    10,     1.6f,    UNUSED, UNUSED, "433MHz HELTEC LORA32 HT-CT62 SX1262" },  // SX1262  @gargomoma
   {      0x3c,        0,        1,       UNUSED,        20,       21,      RADIO_SX1278,    8,     4,   UNUSED,  UNUSED,   5,       6,      7,    10,     0.0f,    UNUSED, UNUSED, "Custom ESP32-C3 433MHz SX1278"     },  // SX1278 @gargomoma
+  {      0x3c,        0,        1,       UNUSED,        20,       21,      RADIO_SX1278,    8,     4,       3,   UNUSED,   5,      6,     7,     10,     0.0f,       19,      18, "Custom ESP32-C3 E32-400M30S"     },  // SX1278 @gargomoma
 #else
   {      0x3c,        4,        15,       16,           0,        25,      RADIO_SX1278,    18,     26,     12,   UNUSED,  14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "433MHz HELTEC WiFi LoRA 32 V1" },      // SX1278 @4m1g0
   {      0x3c,        4,        15,       16,           0,        25,      RADIO_SX1276,    18,     26,     12,   UNUSED,  14,      19,     27,     5,     0.0f,   UNUSED, UNUSED, "863-928MHz HELTEC WiFi LoRA 32 V1" },  // SX1276
@@ -90,6 +92,7 @@ ConfigManager::ConfigManager()
   server.on(REFRESH_CONSOLE_URL, [this] { handleRefreshConsole(); });
   server.on(REFRESH_WORLDMAP_URL, [this] { handleRefreshWorldmap(); });
   server.on(JSON_URL, [this] { handleJsonStats(); });//@gargomoma
+  server.on("/description.xml", [this] { SSDP.schema(server.client()); });//@gargomoma
   setupUpdateServer(
       [this](const char *updatePath) { httpUpdater.setup(&server, updatePath); },
       [this](const char *userName, char *password) { httpUpdater.updateCredentials(userName, password); });

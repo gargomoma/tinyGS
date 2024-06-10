@@ -27,6 +27,8 @@
 #include <Wire.h>
 #include "html.h"
 
+#include <ESP32SSDP.h>
+
 #ifdef ESP8266
 #include "ESP8266HTTPUpdateServer.h"
 #elif defined(ESP32)
@@ -66,6 +68,8 @@ constexpr auto configVersion = "0.05"; //max 4 chars
 
 constexpr auto AP_TIMEOUT_MS = "300000";
 
+extern SSDPClass SSDP;
+
 enum boardNum
 {
  #if CONFIG_IDF_TARGET_ESP32S3
@@ -74,6 +78,7 @@ enum boardNum
  #elif CONFIG_IDF_TARGET_ESP32C3
   HELTEC_LORA32_HTCT62 = 0,
   ESP32C3_SX1278_LF,
+  ESP32C3_E32400M30S,  
  #else
   HELTEC_V1_LF = 0,
   HELTEC_V1_HF,

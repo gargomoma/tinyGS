@@ -165,6 +165,8 @@ void setup()
   }
   
   printControls();
+  
+  startSSDP();
 }
 
 void loop() {  
@@ -313,6 +315,28 @@ void handleSerial()
     radio.enableInterrupt();
   }
 }
+
+void startSSDP()
+{	
+	char fullName[256]; // Ensure this buffer is large enough to hold both strings
+	strcpy(fullName, "TinyGS_");
+	strcat(fullName, configManager.getThingName());
+	
+    SSDP.setSchemaURL("description.xml");
+    SSDP.setHTTPPort(80);
+    SSDP.setName(fullName);
+    SSDP.setURL("/");
+	////////////////////////////////////////
+    SSDP.setModelName( "TinyGS" );
+    SSDP.setModelURL("https://tinygs.com/");
+    SSDP.setManufacturer("TinyGs");
+    SSDP.setManufacturerURL("https://tinygs.com/");
+    SSDP.setDeviceType("rootdevice");
+    SSDP.setServerName("SSDPServer/1.0");
+    Serial.printf("Starting SSDP...\n");
+    SSDP.begin();	
+}
+
 
 // function to print controls
 void printControls()
